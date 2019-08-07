@@ -1,45 +1,38 @@
-/*****************************************************************************
-*  串口库函数                                                          
-*  Copyright (C) 2019 wkxboot 1131204425@qq.com.                             
-*                                                                            
+/**
+****************************************************************************************                                                                                                                                                       
 *                                                                            
 *  This program is free software; you can redistribute it and/or modify      
 *  it under the terms of the GNU General Public License version 3 as         
 *  published by the Free Software Foundation.                                
 *                                                                            
-*  @file     xuart.c                                                   
-*  @brief    串口库函数                                                                                                                                                                                             
-*  @author   wkxboot                                                      
-*  @email    1131204425@qq.com                                              
-*  @version  v1.0.2                                                  
-*  @date     2019/1/8                                            
-*  @license  GNU General Public License (GPL)                                
+*  @file       xuart.c
+*  @brief      uart库
+*  @author     wkxboot
+*  @version    v1.0.0
+*  @date       2019/7/3
+*  @copyright  <h4><left>&copy; copyright(c) 2019 wkxboot 1131204425@qq.com</center></h4>  
 *                                                                            
 *                                                                            
-*****************************************************************************/
+****************************************************************************************/
 #include "xuart.h"
-
-#if  XUART_DEBUG  >  0
-#define  XUART_ASSERT(x)  { if ((x) == 0) { while (1);}}
-#else
-#define  XUART_ASSERT(x)
-#endif
+#include "debug_assert.h"
 
 
+ /** 内部维护的实体*/
 typedef struct
 {
-    uint8_t is_driver_register;
-    xuart_hal_driver_t *driver;
+    uint8_t is_driver_register;/**< 驱动是否注册*/
+    xuart_hal_driver_t *driver;/**< 驱动指针*/
 }xuart_instance_t;
 
-/*内部维护的实体*/
+ /** 内部维护的实体*/
 static xuart_instance_t xuart;
 
 
-/*
+/**
 * @brief  从串口非阻塞的读取数据
 * @param handle 串口句柄
-* @param dst 数据目的地址
+* @param dst 数据保存目的地址
 * @param size 期望读取的数量
 * @return 读取的数量
 * @note 可重入
@@ -48,9 +41,9 @@ uint32_t xuart_read(xuart_handle_t *handle,uint8_t *dst,uint32_t size)
 {
     uint32_t read = 0;
 
-    XUART_ASSERT(xuart.is_driver_register);
-    XUART_ASSERT(handle);
-    XUART_ASSERT(dst);
+    DEBUG_ASSERT_FALSE(xuart.is_driver_register);
+    DEBUG_ASSERT_NULL(handle);
+    DEBUG_ASSERT_NULL(dst);
 
     XUART_ENTER_CRITICAL();
     read = circle_buffer_read(&handle->recv,dst,size);
@@ -64,7 +57,7 @@ uint32_t xuart_read(xuart_handle_t *handle,uint8_t *dst,uint32_t size)
     return read;
 }
 
-/*
+/**
 * @brief  从串口非阻塞的写入指定数量的数据
 * @param handle 串口句柄
 * @param src 数据源地址
@@ -76,9 +69,9 @@ uint32_t xuart_write(xuart_handle_t *handle,const uint8_t *src,uint32_t size)
 {
     uint32_t write = 0;
 
-    XUART_ASSERT(xuart.is_driver_register);
-    XUART_ASSERT(handle);
-    XUART_ASSERT(src);
+    DEBUG_ASSERT_FALSE(xuart.is_driver_register);
+    DEBUG_ASSERT_NULL(handle);
+    DEBUG_ASSERT_NULL(src);
 
     XUART_ENTER_CRITICAL();
     write = circle_buffer_write(&handle->send,src,size);
@@ -92,7 +85,7 @@ uint32_t xuart_write(xuart_handle_t *handle,const uint8_t *src,uint32_t size)
 }
 
 
-/*
+/**
 * @brief 串口缓存清除
 * @param handle 串口句柄
 * @return 无
@@ -101,9 +94,9 @@ uint32_t xuart_write(xuart_handle_t *handle,const uint8_t *src,uint32_t size)
 void xuart_clear(xuart_handle_t *handle)
 {
 
-    XUART_ASSERT(xuart.is_driver_register);
-    XUART_ASSERT(handle);
-    XUART_ASSERT(handle->is_port_open);
+    DEBUG_ASSERT_FALSE(xuart.is_driver_register);
+    DEBUG_ASSERT_NULL(handle);
+    DEBUG_ASSERT_NULL(handle->is_port_open);
     
     XUART_ENTER_CRITICAL();
     handle->is_txe_int_enable = 0;
@@ -116,7 +109,7 @@ void xuart_clear(xuart_handle_t *handle)
 }
 
 
-/*
+/**
 * @brief 打开串口
 * @param handle 创建输出的串口句柄指针
 * @param port 端口号
@@ -132,8 +125,8 @@ int xuart_open(xuart_handle_t *handle,uint8_t port,uint32_t baudrate,uint8_t dat
 {
     int rc;
 
-    XUART_ASSERT(xuart.is_driver_register);
-    XUART_ASSERT(handle);
+    DEBUG_ASSERT_FALSE(xuart.is_driver_register);
+    DEBUG_ASSERT_NULL(handle);
 
     XUART_ENTER_CRITICAL();
     rc = xuart.driver->init(port,baudrate,data_bit,stop_bit);
@@ -157,7 +150,7 @@ int xuart_open(xuart_handle_t *handle,uint8_t port,uint32_t baudrate,uint8_t dat
     return 0;
 }
 
-/*
+/**
 * @brief  关闭串口
 * @param handle 串口句柄
 * @return -1： 失败 0：失败
@@ -167,8 +160,8 @@ int xuart_close(xuart_handle_t *handle)
 {
     int rc = 0;
     
-    XUART_ASSERT(xuart.is_driver_register);
-    XUART_ASSERT(handle);
+    DEBUG_ASSERT_FALSE(xuart.is_driver_register);
+    DEBUG_ASSERT_NULL(handle);
 
     if (handle->is_port_open == 0) {
         return 0;
@@ -193,27 +186,27 @@ int xuart_close(xuart_handle_t *handle)
     return 0;
 }
 
-/*
-* @brief 串口全局初始化
+/**
+* @brief 串口注册驱动
 * @param driver 串口硬件驱动
-* @return none
+* @return 初始化是否成功
+* @retval 0 成功
+* @retval -1 失败
 * @note
 */
-void xuart_init(xuart_hal_driver_t *driver)
+int xuart_register_hal_driver(xuart_hal_driver_t *driver)
 { 
-    XUART_ASSERT(driver);
-    XUART_ASSERT(driver->init);
-    XUART_ASSERT(driver->deinit);
-    XUART_ASSERT(driver->enable_txe_it);
-    XUART_ASSERT(driver->disable_txe_it);
-    XUART_ASSERT(driver->enable_rxne_it);
-    XUART_ASSERT(driver->disable_rxne_it);
-
+    if (driver == NULL || driver->init == NULL || driver->deinit == NULL  || \
+        driver->enable_txe_it == NULL  || driver->disable_txe_it == NULL  || \
+        driver->enable_rxne_it == NULL || driver->disable_rxne_it == NULL) {
+        return -1;
+    }
     xuart.driver = driver;
     xuart.is_driver_register = 1;
+    return 0;
 }
 
-/*
+/**
 * @brief 串口中断接收一个字节
 * @param handle 串口句柄
 * @param recv 接收到的字节
@@ -224,9 +217,9 @@ uint32_t xuart_isr_put_char(xuart_handle_t *handle,uint8_t recv)
 {
     uint32_t write;
 
-    XUART_ASSERT(xuart.is_driver_register);
-    XUART_ASSERT(handle);
-    XUART_ASSERT(handle->is_port_open);
+    DEBUG_ASSERT_FALSE(xuart.is_driver_register);
+    DEBUG_ASSERT_NULL(handle);
+    DEBUG_ASSERT_NULL(handle->is_port_open);
     
     write = circle_buffer_write(&handle->recv,&recv,1);
     if (write == 0 ) {
@@ -237,7 +230,7 @@ uint32_t xuart_isr_put_char(xuart_handle_t *handle,uint8_t recv)
     return write;
 }
 
-/*
+/**
 * @brief 串口中断发送一个字节
 * @param handle 串口句柄
 * @param recv 需要发送的字节
@@ -248,9 +241,9 @@ uint32_t xuart_isr_get_char(xuart_handle_t *handle,uint8_t *send)
 {
     uint32_t read;
 
-    XUART_ASSERT(xuart.is_driver_register);
-    XUART_ASSERT(handle);
-    XUART_ASSERT(handle->is_port_open);
+    DEBUG_ASSERT_FALSE(xuart.is_driver_register);
+    DEBUG_ASSERT_NULL(handle);
+    DEBUG_ASSERT_NULL(handle->is_port_open);
 
     read = circle_buffer_read(&handle->send,send,1);
     if (read == 0 ) {
@@ -262,22 +255,27 @@ uint32_t xuart_isr_get_char(xuart_handle_t *handle,uint8_t *send)
 }
 
 
-#if SERIAL_IN_FREERTOS  > 0
+#if XUART_IN_FREERTOS  > 0
 #include "cmsis_os.h"
-/*
+#include "tiny_timer.h"
+/**
 * @brief 串口等待数据
 * @param handle 串口句柄
 * @param timeout 超时时间
 * @return 接收缓存中的数据量
 * @note 
 */
-uint32_t serial_select(xuart_handle_t *handle,uint32_t timeout)
+uint32_t xuart_select(xuart_handle_t *handle,uint32_t timeout)
 {
-    XUART_ASSERT(xuart.is_driver_register);
-    XUART_ASSERT(handle);
-    XUART_ASSERT(handle->is_port_open);
+    tiny_timer_t timer;
 
-    while (timeout -- > 0 && circle_buffer_size(&handle->recv) == 0) {
+    DEBUG_ASSERT_FALSE(xuart.is_driver_register);
+    DEBUG_ASSERT_NULL(handle);
+    DEBUG_ASSERT_NULL(handle->is_port_open);
+
+    tiny_timer_init(&timer,0,timeout);
+
+    while (tiny_timer_value(&timer) > 0 && circle_buffer_size(&handle->recv) == 0) {
         osDelay(1);
     }
      
@@ -285,20 +283,23 @@ uint32_t serial_select(xuart_handle_t *handle,uint32_t timeout)
 }
 
 
-/*
+/**
 * @brief  串口等待数据发送完毕
 * @param handle 串口句柄
 * @param timeout 超时时间
 * @return 发送缓存中的数据量
 * @note 
 */
-uint32_t serial_complete(xuart_handle_t *handle,uint32_t timeout)
+uint32_t xuart_complete(xuart_handle_t *handle,uint32_t timeout)
 {
-    XUART_ASSERT(xuart.is_driver_register);
-    XUART_ASSERT(handle);
-    XUART_ASSERT(handle->is_port_open);
+    tiny_timer_t timer;
 
-    while (timeout -- > 0 && circle_buffer_size(&handle->send) > 0) {
+    DEBUG_ASSERT_FALSE(xuart.is_driver_register);
+    DEBUG_ASSERT_NULL(handle);
+    DEBUG_ASSERT_NULL(handle->is_port_open);
+
+    tiny_timer_init(&timer,0,timeout);
+    while (tiny_timer_value(&timer) > 0 && circle_buffer_size(&handle->send) > 0) {
         osDelay(1);
     }
 

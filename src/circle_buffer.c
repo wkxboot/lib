@@ -1,4 +1,5 @@
-/*****************************************************************************
+/**
+******************************************************************************
 *  循环缓存库函数                                                          
 *  Copyright (C) 2019 wkxboot 1131204425@qq.com.                             
 *                                                                            
@@ -25,7 +26,7 @@
 #define  CIRCLE_BUFFER_ASSERT(x)
 #endif
 
-/*
+/**
 * @brief 循环缓存初始化
 * @param cb 循环缓存指针
 * @param buffer 数据缓存地址
@@ -47,19 +48,21 @@ void circle_buffer_init(circle_buffer_t *cb,uint8_t *buffer,uint32_t size)
 
 }
 
-/*
+/**
 * @brief 循环缓存当前数据量
 * @param cb 循环缓存指针
 * @return 循环缓存当前数据量
 * @
 * @note
 */
-uint8_t circle_buffer_size(circle_buffer_t *cb)
+uint32_t circle_buffer_size(circle_buffer_t *cb)
 {
+    CIRCLE_BUFFER_ASSERT(cb);
+    CIRCLE_BUFFER_ASSERT(cb->write >= cb->read);
     return cb->write - cb->read;
 }
 
-/*
+/**
 * @brief 循环缓存冲刷
 * @param cb 循环缓存指针
 * @param 
@@ -80,7 +83,7 @@ uint32_t circle_buffer_flush(circle_buffer_t *cb)
     return size;
 }
 
-/*
+/**
 * @brief 循环缓存是否已满
 * @param cb 循环缓存指针
 * @return 1：已满 0：未满
@@ -93,7 +96,7 @@ uint8_t circle_buffer_is_full(circle_buffer_t *cb)
     return cb->write - cb->read == cb->size ? 1 : 0;
 }
 
-/*
+/**
 * @brief 循环缓存是否已空
 * @param cb 循环缓存指针
 * @return 1：已空 0：未空
@@ -105,7 +108,7 @@ uint8_t circle_buffer_is_empty(circle_buffer_t *cb)
     return cb->read == cb->write ? 1 : 0;
 }
 
-/*
+/**
 * @brief  读取循环缓存中的数据
 * @param  cb 循环缓存指针
 * @param  dst 目的地址
@@ -147,7 +150,7 @@ uint32_t circle_buffer_read(circle_buffer_t *cb,uint8_t *dst,uint32_t size)
 }
 
 
-/*
+/**
 * @brief 循环缓存写入数据
 * @param cb 循环缓存指针
 * @param src 数据源地址
