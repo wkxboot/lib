@@ -135,6 +135,7 @@ uint32_t xuart_isr_get_char(xuart_handle_t *handle,uint8_t *send);
 
 
 #if XUART_IN_FREERTOS > 0
+#include "cmsis_os.h"
 /**
 * @brief 串口等待数据
 * @param handle 串口句柄
@@ -160,7 +161,7 @@ uint32_t xuart_complete(xuart_handle_t *handle,uint32_t timeout);
 */
 
 #ifdef __ICCARM__
-#include "cmsis_iar.h"
+#include "cmsis_iccarm.h"
   #if (defined (__ARM6M__) && (__CORE__ == __ARM6M__))             
     #define XUART_ENTER_CRITICAL()                             \
     {                                                          \

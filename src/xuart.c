@@ -256,8 +256,7 @@ uint32_t xuart_isr_get_char(xuart_handle_t *handle,uint8_t *send)
 
 
 #if XUART_IN_FREERTOS  > 0
-#include "cmsis_os.h"
-#include "tiny_timer.h"
+#include "xtimer.h"
 /**
 * @brief 串口等待数据
 * @param handle 串口句柄
@@ -267,15 +266,15 @@ uint32_t xuart_isr_get_char(xuart_handle_t *handle,uint8_t *send)
 */
 uint32_t xuart_select(xuart_handle_t *handle,uint32_t timeout)
 {
-    tiny_timer_t timer;
+    xtimer_t timer;
 
     DEBUG_ASSERT_FALSE(xuart.is_driver_register);
     DEBUG_ASSERT_NULL(handle);
     DEBUG_ASSERT_NULL(handle->is_port_open);
 
-    tiny_timer_init(&timer,0,timeout);
+    xtimer_init(&timer,0,timeout);
 
-    while (tiny_timer_value(&timer) > 0 && circle_buffer_size(&handle->recv) == 0) {
+    while (xtimer_value(&timer) > 0 && circle_buffer_size(&handle->recv) == 0) {
         osDelay(1);
     }
      
@@ -292,14 +291,14 @@ uint32_t xuart_select(xuart_handle_t *handle,uint32_t timeout)
 */
 uint32_t xuart_complete(xuart_handle_t *handle,uint32_t timeout)
 {
-    tiny_timer_t timer;
+    xtimer_t timer;
 
     DEBUG_ASSERT_FALSE(xuart.is_driver_register);
     DEBUG_ASSERT_NULL(handle);
     DEBUG_ASSERT_NULL(handle->is_port_open);
 
-    tiny_timer_init(&timer,0,timeout);
-    while (tiny_timer_value(&timer) > 0 && circle_buffer_size(&handle->send) > 0) {
+    xtimer_init(&timer,0,timeout);
+    while (xtimer_value(&timer) > 0 && circle_buffer_size(&handle->send) > 0) {
         osDelay(1);
     }
 

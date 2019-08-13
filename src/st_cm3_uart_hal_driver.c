@@ -65,7 +65,7 @@ static UART_HandleTypeDef *st_uart_hal_get_handle_by_port(uint8_t port)
 }
 
 
-/*
+/**
 * @brief 串口初始化驱动
 * @param port 端口
 * @param baudrate 波特率
@@ -74,7 +74,7 @@ static UART_HandleTypeDef *st_uart_hal_get_handle_by_port(uint8_t port)
 * @return 
 * @note
 */
-int st_uart_hal_init(uint8_t port,uint32_t baudrate,uint8_t data_bit,uint8_t stop_bit)
+static int st_uart_hal_init(uint8_t port,uint32_t baudrate,uint8_t data_bit,uint8_t stop_bit)
 {
     UART_HandleTypeDef *st_uart_handle;
 
@@ -104,26 +104,26 @@ int st_uart_hal_init(uint8_t port,uint32_t baudrate,uint8_t data_bit,uint8_t sto
 }
 
 
-/*
+/**
 * @brief 串口去初始化驱动
 * @param port uart端口
 * @return = 0 成功
 * @return < 0 失败
 * @note
 */
-int st_uart_hal_deinit(uint8_t port)
+static int st_uart_hal_deinit(uint8_t port)
 {
     return 0;
 }
 
 
-/*
+/**
 * @brief 串口发送为空中断使能驱动
 * @param port uart端口
 * @return 无
 * @note
 */
-void st_uart_hal_enable_txe_it(uint8_t port)
+static void st_uart_hal_enable_txe_it(uint8_t port)
 {
     UART_HandleTypeDef *st_uart_handle;
 
@@ -133,13 +133,13 @@ void st_uart_hal_enable_txe_it(uint8_t port)
 }
 
 
-/*
+/**
 * @brief 串口发送为空中断禁止驱动
 * @param port uart端口
 * @return 无
 * @note
 */
-void st_uart_hal_disable_txe_it(uint8_t port)
+static void st_uart_hal_disable_txe_it(uint8_t port)
 {
     UART_HandleTypeDef *st_uart_handle;
 
@@ -149,13 +149,13 @@ void st_uart_hal_disable_txe_it(uint8_t port)
 }
 
 
-/*
+/**
 * @brief 串口接收不为空中断使能驱动
 * @param port uart端口
 * @return 无
 * @note
 */  
-void st_uart_hal_enable_rxne_it(uint8_t port)
+static void st_uart_hal_enable_rxne_it(uint8_t port)
 {
     UART_HandleTypeDef *st_uart_handle;
 
@@ -165,13 +165,13 @@ void st_uart_hal_enable_rxne_it(uint8_t port)
 }
 
 
-/*
+/**
 * @brief 串口接收不为空中断禁止驱动
 * @param port uart端口
 * @return 无
 * @note
 */
-void st_uart_hal_disable_rxne_it(uint8_t port)
+static void st_uart_hal_disable_rxne_it(uint8_t port)
 {
     UART_HandleTypeDef *st_uart_handle;
 
@@ -181,7 +181,7 @@ void st_uart_hal_disable_rxne_it(uint8_t port)
 }
 
 
-/*
+/**
 * @brief 串口中断routine驱动
 * @param port uart端口
 * @return 无

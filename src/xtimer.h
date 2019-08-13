@@ -1,17 +1,15 @@
-#ifndef  __TINY_TIMER_H__
-#define  __TINY_TIMER_H__
-
-#include "cmsis_os.h"
+#ifndef  __XTIMER_H__
+#define  __XTIMER_H__
 
 #ifdef  __cplusplus
-#define  TINY_TIMER_BEGIN extern "C" {
-#define  TINY_TIMER_END   }
+#define  XTIMER_BEGIN extern "C" {
+#define  XTIMER_END   }
 #else
-#define  TINY_TIMER_BEGIN
-#define  TINY_TIMER_END
+#define  XTIMER_BEGIN
+#define  XTIMER_END
 #endif
  
-TINY_TIMER_BEGIN
+XTIMER_BEGIN
 
  /** @brief 定时器定义*/
 typedef struct
@@ -19,7 +17,7 @@ typedef struct
     uint8_t dir; /**< 定时器增长方向*/
     uint32_t timeout;/**< 定时器定时值*/
     uint32_t start;/**< 定时器初始值*/
-}tiny_timer_t;
+}xtimer_t;
 
 
 /**
@@ -34,7 +32,7 @@ typedef struct
 * @attention
 * @note
 */
-int tiny_timer_init(tiny_timer_t *timer,uint8_t dir,uint32_t timeout);
+int xtimer_init(xtimer_t *timer,uint8_t dir,uint32_t timeout);
 
 /**
 * @brief 定时器当前值
@@ -45,10 +43,10 @@ int tiny_timer_init(tiny_timer_t *timer,uint8_t dir,uint32_t timeout);
 *            如果时向下增长，当流逝的时间大于超时值时，返回0 。
 * @note
 */
-uint32_t tiny_timer_value(tiny_timer_t *timer);
+uint32_t xtimer_value(xtimer_t *timer);
 
 
 
-TINY_TIMER_BEGIN
+XTIMER_END
 
 #endif

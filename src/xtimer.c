@@ -5,7 +5,7 @@
 *  it under the terms of the GNU General Public License version 3 as         
 *  published by the Free Software Foundation.                                
 *                                                                            
-*  @file       tiny_timer.c
+*  @file       xtimer.c
 *  @brief      tiny timer
 *  @author     wkxboot
 *  @version    v1.0.0
@@ -14,7 +14,8 @@
 *                                                                            
 *                                                                            
 *****************************************************************************/
-#include "tiny_timer.h"
+#include "cmsis_os.h"
+#include "xtimer.h"
 #include "debug_assert.h"
 
 
@@ -30,7 +31,7 @@
 * @attention
 * @note
 */
-int tiny_timer_init(tiny_timer_t *timer,uint8_t dir,uint32_t timeout)
+int xtimer_init(xtimer_t *timer,uint8_t dir,uint32_t timeout)
 {
     if (timer == NULL) {
         return -1;
@@ -52,7 +53,7 @@ int tiny_timer_init(tiny_timer_t *timer,uint8_t dir,uint32_t timeout)
 *            如果时向下增长，当流逝的时间大于超时值时，返回0 。
 * @note
 */
-uint32_t tiny_timer_value(tiny_timer_t *timer)
+uint32_t xtimer_value(xtimer_t *timer)
 {
     uint32_t time_elapse;
 
