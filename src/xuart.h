@@ -2,7 +2,6 @@
 #define  __XUART_H__
 #include "stdint.h"
 #include "circle_buffer.h"
-
 #ifdef  __cplusplus
 # define XUART_BEGIN  extern "C" {
 # define XUART_END    }

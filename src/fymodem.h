@@ -20,20 +20,20 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdarg.h>
-#include "serial.h"
+#include "xuart.h"
 
 /* max length of filename */
 #define FYMODEM_FILE_NAME_MAX_LENGTH  (64)
 
 /* receive file over ymodem */
-int32_t fymodem_receive(serial_handle_t *handle,
+int32_t fymodem_receive(xuart_handle_t *handle,
                         uint32_t flash_addr,
                         uint32_t flash_limit,
                         char *filename,
                         uint32_t timeout);
 
 /* send file over ymodem */
-int32_t fymodem_send(serial_handle_t *handle,
+int32_t fymodem_send(xuart_handle_t *handle,
                      uint8_t *txdata,
                      size_t txsize,
                      const char *filename);

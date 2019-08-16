@@ -29,6 +29,7 @@
 
 #include <fymodem.h>
 #include "flash_if.h"
+#include "xtimer.h"
 #include "log.h"
 
 
@@ -84,9 +85,9 @@ static int __ym_sleep_ms(uint32_t ms)
 * @note
 */
 
-static int __ym_flush(serial_handle_t *handle)
+static void __ym_flush(xuart_handle_t *handle)
 {
-   return serial_flush(handle);
+   xuart_clear(handle);
 }
 /*
 * @brief 
@@ -95,16 +96,16 @@ static int __ym_flush(serial_handle_t *handle)
 * @return 
 * @note
 */
-static int __ym_getchar(serial_handle_t *handle,uint32_t timeout)
+static int __ym_getchar(xuart_handle_t *handle,uint32_t timeout)
 {
     int rc;
-    char c;
-    utils_timer_t timer;
+    uint8_t c;
+    xtimer_t timer;
     
-    utils_timer_init(&timer,timeout,false);
+    xtimer_init(&timer,0,timeout);
 
 
-    rc = serial_select(handle,utils_timer_value(&timer));
+    rc = xuart_select(handle,xtimer_value(&timer));
     if (rc == 0) {
         log_error("ymodem select timeout.\r\n");
         return -1;
@@ -114,7 +115,7 @@ static int __ym_getchar(serial_handle_t *handle,uint32_t timeout)
         return -1;
     }
 
-    rc = serial_read(handle,&c,1);
+    rc = xuart_read(handle,&c,1);
     if (rc <= 0) {
         log_error("ymodem read err.\r\n");
         return -1;
@@ -131,16 +132,16 @@ static int __ym_getchar(serial_handle_t *handle,uint32_t timeout)
 * @return 
 * @note
 */
-static int __ym_putchar(serial_handle_t *handle,char c)
+static int __ym_putchar(xuart_handle_t *handle,char c)
 {
     int rc;
 
-    rc = serial_write(handle,&c,1);
+    rc = xuart_write(handle,(const uint8_t*)&c,1);
     if (rc != 1) {
         log_error("ymodem write err.\r\n");
         return -1;
     }
-    rc = serial_complete(handle,5);
+    rc = xuart_complete(handle,5);
     if (rc != 0) {
         log_error("ymodem complete err.\r\n");
         return -1;
@@ -231,7 +232,7 @@ static void ym_readU32(const uint8_t* buf, uint32_t *val)
   *        -1: timeout or packet error
   *         1: abort by user / corrupt packet
   */
-static int32_t ym_rx_packet(serial_handle_t *handle,
+static int32_t ym_rx_packet(xuart_handle_t *handle,
                             uint8_t *rxdata,
                             int32_t *rxlen,
                             uint32_t packets_rxed,
@@ -327,7 +328,7 @@ static int32_t ym_rx_packet(serial_handle_t *handle,
  * @param rxlen  Max in length
  * @return The length of the file received, or 0 on error
  */
-int32_t fymodem_receive(serial_handle_t *handle,
+int32_t fymodem_receive(xuart_handle_t *handle,
                         uint32_t flash_addr,
                         uint32_t flash_limit,
                         char *filename,
@@ -497,7 +498,7 @@ int32_t fymodem_receive(serial_handle_t *handle,
 }
 
 /* ------------------------------------ */
-static void ym_send_packet(serial_handle_t *handle,
+static void ym_send_packet(xuart_handle_t *handle,
                            uint8_t *txdata,
                            int32_t block_nbr)
 {
@@ -532,7 +533,7 @@ static void ym_send_packet(serial_handle_t *handle,
 
 /* ----------------------------------------------- */
 /* Send block 0 (the filename block), filename might be truncated to fit. */
-static void ym_send_packet0(serial_handle_t *handle,
+static void ym_send_packet0(xuart_handle_t *handle,
                             const char* filename,
                             int32_t filesize)
 {
@@ -561,7 +562,7 @@ static void ym_send_packet0(serial_handle_t *handle,
 }
 
 /* ------------------------------------------------- */
-static void ym_send_data_packets(serial_handle_t *handle,
+static void ym_send_data_packets(xuart_handle_t *handle,
                                  uint8_t* txdata,
                                  uint32_t txlen,
                                  uint32_t timeout_ms)
@@ -614,7 +615,7 @@ static void ym_send_data_packets(serial_handle_t *handle,
 }
 
 /* ------------------------------------------------------- */
-int32_t fymodem_send(serial_handle_t *handle,uint8_t* txdata, size_t txsize, const char* filename)
+int32_t fymodem_send(xuart_handle_t *handle,uint8_t* txdata, size_t txsize, const char* filename)
 {
   bool crc_nak = true;
   bool file_done = false;

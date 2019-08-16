@@ -1,4 +1,5 @@
-/*****************************************************************************
+/**
+*******************************************************************************
 *  nxp serial uart hal driver                                                          
 *  Copyright (C) 2019 wkxboot 1131204425@qq.com.                             
 *                                                                            
@@ -7,7 +8,7 @@
 *  it under the terms of the GNU General Public License version 3 as         
 *  published by the Free Software Foundation.                                
 *                                                                            
-*  @file     nxp_serial_uart_hal_driver.c                                                   
+*  @file     nxp_uart_hal_driver.c                                                   
 *  @brief    nxp serial uart hal driver                                                                                                                                                                                             
 *  @author   wkxboot                                                      
 *  @email    1131204425@qq.com                                              
@@ -20,22 +21,28 @@
 #include "fsl_usart.h"
 #include "fsl_clock.h"
 #include "pin_mux.h"
-#include "nxp_serial_uart_hal_driver.h"
+#include "nxp_cm4_uart_hal_driver.h"
 
-
-/* *****************************************************************************
+/*******************************************************************************
 *
 *        lpc54606 serial uart hal driver在IAR freertos下的移植
 *
 ********************************************************************************/
-/*nxp serial uart驱动结构体*/
-serial_hal_driver_t nxp_serial_uart_hal_driver = {
-.init = nxp_serial_uart_hal_init,
-.deinit = nxp_serial_uart_hal_deinit,
-.enable_txe_it = nxp_serial_uart_hal_enable_txe_it,
-.disable_txe_it = nxp_serial_uart_hal_disable_txe_it,
-.enable_rxne_it = nxp_serial_uart_hal_enable_rxne_it,
-.disable_rxne_it = nxp_serial_uart_hal_disable_rxne_it
+static int nxp_uart_hal_init(uint8_t port,uint32_t baud_rates,uint8_t data_bits,uint8_t stop_bits);
+static int nxp_uart_hal_deinit(uint8_t port);
+static void nxp_uart_hal_enable_txe_it(uint8_t port);
+static void nxp_uart_hal_disable_txe_it(uint8_t port);
+static void nxp_uart_hal_enable_rxne_it(uint8_t port);
+static void nxp_uart_hal_disable_rxne_it(uint8_t port);
+
+/*nxp uart驱动结构体*/
+xuart_hal_driver_t xuart_hal_driver = {
+.init = nxp_uart_hal_init,
+.deinit = nxp_uart_hal_deinit,
+.enable_txe_it = nxp_uart_hal_enable_txe_it,
+.disable_txe_it = nxp_uart_hal_disable_txe_it,
+.enable_rxne_it = nxp_uart_hal_enable_rxne_it,
+.disable_rxne_it = nxp_uart_hal_disable_rxne_it
 };
 
 /*
@@ -133,7 +140,7 @@ static int nxp_serial_uart_search_irq_num_and_clk_by_port(uint8_t port,IRQn_Type
     return 0;
 }
 
-/*
+/**
 * @brief 串口初始化驱动
 * @param port uart端口号
 * @param bauds 波特率
@@ -142,7 +149,7 @@ static int nxp_serial_uart_search_irq_num_and_clk_by_port(uint8_t port,IRQn_Type
 * @return 
 * @note
 */
-int nxp_serial_uart_hal_init(uint8_t port,uint32_t baud_rates,uint8_t data_bits,uint8_t stop_bits)
+static int nxp_uart_hal_init(uint8_t port,uint32_t baud_rates,uint8_t data_bits,uint8_t stop_bits)
 {
     status_t status;
     usart_config_t config;
@@ -186,26 +193,26 @@ int nxp_serial_uart_hal_init(uint8_t port,uint32_t baud_rates,uint8_t data_bits,
 }
 
 
-/*
+/**
 * @brief 串口去初始化驱动
 * @param port uart端口号
 * @return = 0 成功
 * @return < 0 失败
 * @note
 */
-int nxp_serial_uart_hal_deinit(uint8_t port)
+static int nxp_uart_hal_deinit(uint8_t port)
 {
     return 0; 
 }
 
 
-/*
+/**
 * @brief 串口发送为空中断使能驱动
 * @param port uart端口号
 * @return 无
 * @note
 */ 
-void nxp_serial_uart_hal_enable_txe_it(uint8_t port)
+static void nxp_uart_hal_enable_txe_it(uint8_t port)
 {
     USART_Type *nxp_uart_handle; 
 
@@ -214,13 +221,13 @@ void nxp_serial_uart_hal_enable_txe_it(uint8_t port)
 }
  
 
-/*
+/**
 * @brief 串口发送为空中断禁止驱动
 * @param port uart端口号
 * @return 无
 * @note
 */
-void nxp_serial_uart_hal_disable_txe_it(uint8_t port)
+static void nxp_uart_hal_disable_txe_it(uint8_t port)
 {
     USART_Type *nxp_uart_handle; 
 
@@ -229,13 +236,13 @@ void nxp_serial_uart_hal_disable_txe_it(uint8_t port)
 }
 
 
-/*
+/**
 * @brief 串口接收不为空中断使能驱动
 * @param port uart端口号
 * @return 无
 * @note
 */ 
-void nxp_serial_uart_hal_enable_rxne_it(uint8_t port)
+static void nxp_uart_hal_enable_rxne_it(uint8_t port)
 {
     USART_Type *nxp_uart_handle; 
 
@@ -244,13 +251,13 @@ void nxp_serial_uart_hal_enable_rxne_it(uint8_t port)
 }
 
 
-/*
+/**
 * @brief 串口接收不为空中断禁止驱动
 * @param port uart端口号
 * @return 无
 * @note
 */
-void nxp_serial_uart_hal_disable_rxne_it(uint8_t port)
+static void nxp_uart_hal_disable_rxne_it(uint8_t port)
 {
     USART_Type *nxp_uart_handle; 
 
@@ -259,20 +266,20 @@ void nxp_serial_uart_hal_disable_rxne_it(uint8_t port)
 }
 
 
-/*
+/**
 * @brief 串口中断routine驱动
 * @param handle uart的serial句柄
 * @return 无
 * @note
 */
-void nxp_serial_uart_hal_isr(serial_handle_t *handle)
+void nxp_uart_hal_isr(xuart_handle_t *handle)
 {
-    int result;
+    int rc;
     uint32_t tmp_flag = 0, tmp_it_source = 0; 
-    char  send_byte,recv_byte;
+    uint8_t send_byte,recv_byte;
     USART_Type *nxp_uart_handle; 
 
-    nxp_uart_handle = nxp_serial_uart_search_handle_by_port(handle->port);
+    nxp_uart_handle = nxp_serial_uart_search_handle_by_port(handle->setting.port);
 
     tmp_flag = USART_GetEnabledInterrupts(nxp_uart_handle);
     tmp_it_source = USART_GetStatusFlags(nxp_uart_handle);
@@ -280,13 +287,13 @@ void nxp_serial_uart_hal_isr(serial_handle_t *handle)
     /*接收中断处理*/
     if((tmp_it_source & kUSART_RxFifoNotEmptyFlag) && (tmp_flag & kUSART_RxLevelInterruptEnable)){
         recv_byte = USART_ReadByte(nxp_uart_handle);
-        isr_serial_put_byte_from_recv(handle,recv_byte);
+        xuart_isr_put_char(handle,recv_byte);
 
     }
     /*发送中断处理*/
     if((tmp_it_source & kUSART_TxFifoEmptyFlag) && (tmp_flag & kUSART_TxLevelInterruptEnable)){
-        result = isr_serial_get_byte_to_send(handle,&send_byte);
-        if (result == 1) {
+        rc = xuart_isr_get_char(handle,&send_byte);
+        if (rc) {
             USART_WriteByte(nxp_uart_handle, send_byte);
         }
     }
