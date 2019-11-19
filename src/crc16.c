@@ -79,6 +79,5 @@ uint16_t calculate_crc16(uint8_t *adu, uint16_t size)
         crc_lo = crc_hi ^ table_crc_hi[i];
         crc_hi = table_crc_lo[i];
     }
-    //return (crc_hi << 8 | crc_lo);
-    return (crc_lo << 8 | crc_hi);
+    return (crc_hi << 8 | crc_lo);
 }

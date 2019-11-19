@@ -287,12 +287,12 @@ void nxp_uart_hal_isr(xuart_handle_t *handle)
     /*接收中断处理*/
     if((tmp_it_source & kUSART_RxFifoNotEmptyFlag) && (tmp_flag & kUSART_RxLevelInterruptEnable)){
         recv_byte = USART_ReadByte(nxp_uart_handle);
-        xuart_isr_put_char(handle,recv_byte);
+        xuart_isr_put_bytes_from_recv(handle,&recv_byte,1);
 
     }
     /*发送中断处理*/
     if((tmp_it_source & kUSART_TxFifoEmptyFlag) && (tmp_flag & kUSART_TxLevelInterruptEnable)){
-        rc = xuart_isr_get_char(handle,&send_byte);
+        rc = xuart_isr_get_bytes_to_send(handle,&send_byte,1);
         if (rc) {
             USART_WriteByte(nxp_uart_handle, send_byte);
         }

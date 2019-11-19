@@ -48,6 +48,8 @@ typedef struct
     circle_buffer_t send;/**< 发送缓存地址*/
     uint8_t is_txe_int_enable;/**< 是否允许发送中断*/
     uint8_t is_rxne_int_enable;/**< 是否允许接收中断*/
+    xuart_hal_driver_t *driver;
+    uint8_t is_driver_register;
 }xuart_handle_t;
 
 
@@ -105,31 +107,35 @@ int xuart_close(xuart_handle_t *handle);
 
 /**
 * @brief 串口注册驱动
+* @param handle 串口句柄
 * @param driver 串口硬件驱动
 * @return 初始化是否成功
 * @retval 0 成功
 * @retval -1 失败
 * @note
 */
-int xuart_register_hal_driver(xuart_hal_driver_t *driver);
+int xuart_register_hal_driver(xuart_handle_t *handle,xuart_hal_driver_t *driver);
 
 /**
-* @brief 串口中断接收一个字节
+* @brief 串口中断接收N字节
 * @param handle 串口句柄
-* @param recv 接收到的字节
+* @param buffer 缓存地址
+* @param size 数据量
 * @return none
 * @note
 */
-uint32_t xuart_isr_put_char(xuart_handle_t *handle,uint8_t recv);
+uint32_t xuart_isr_put_bytes_from_recv(xuart_handle_t *handle,uint8_t *buffer,uint8_t size);
+
 
 /**
-* @brief 串口中断发送一个字节
+* @brief 串口中断发送字节
 * @param handle 串口句柄
-* @param recv 需要发送的字节
+* @param buffer 缓存地址
+* @param size 数量
 * @return none
 * @note
 */
-uint32_t xuart_isr_get_char(xuart_handle_t *handle,uint8_t *send);
+uint32_t xuart_isr_get_bytes_to_send(xuart_handle_t *handle,uint8_t *buffer,uint8_t size);
 
 
 
@@ -152,6 +158,17 @@ uint32_t xuart_select(xuart_handle_t *handle,uint32_t timeout);
 * @note 
 */
 uint32_t xuart_complete(xuart_handle_t *handle,uint32_t timeout);
+
+/**
+* @brief 数据阻塞读取指定数量数据
+* @param buffer 数据缓存指针
+* @param size 数据期望读取数量
+* @param timeout 超时时间
+* @return 实际读的数量
+* @note
+*/
+uint32_t xuart_read_block(xuart_handle_t *handle,uint8_t *buffer,uint32_t size,uint32_t timeout);
+
 
 #endif
 

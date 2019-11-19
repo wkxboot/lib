@@ -17,18 +17,6 @@
 #include "xuart.h"
 #include "debug_assert.h"
 
-
- /** 内部维护的实体*/
-typedef struct
-{
-    uint8_t is_driver_register;/**< 驱动是否注册*/
-    xuart_hal_driver_t *driver;/**< 驱动指针*/
-}xuart_instance_t;
-
- /** 内部维护的实体*/
-static xuart_instance_t xuart;
-
-
 /**
 * @brief  从串口非阻塞的读取数据
 * @param handle 串口句柄
@@ -50,7 +38,7 @@ uint32_t xuart_read(xuart_handle_t *handle,uint8_t *dst,uint32_t size)
 
     if (read > 0 && handle->is_rxne_int_enable == 0) {
         handle->is_rxne_int_enable = 1;
-        xuart.driver->enable_rxne_it(handle->setting.port);  
+        handle->driver->enable_rxne_it(handle->setting.port);  
     }
     XUART_EXIT_CRITICAL();
 
@@ -77,7 +65,7 @@ uint32_t xuart_write(xuart_handle_t *handle,const uint8_t *src,uint32_t size)
     write = circle_buffer_write(&handle->send,src,size);
     if (write > 0 && handle->is_txe_int_enable == 0){
         handle->is_txe_int_enable = 1;
-        xuart.driver->enable_txe_it(handle->setting.port);
+        handle->driver->enable_txe_it(handle->setting.port);
     }
     XUART_EXIT_CRITICAL();
 
@@ -101,8 +89,8 @@ void xuart_clear(xuart_handle_t *handle)
     XUART_ENTER_CRITICAL();
     handle->is_txe_int_enable = 0;
     handle->is_rxne_int_enable = 1;
-    xuart.driver->disable_txe_it(handle->setting.port);
-    xuart.driver->enable_rxne_it(handle->setting.port);
+    handle->driver->disable_txe_it(handle->setting.port);
+    handle->driver->enable_rxne_it(handle->setting.port);
     circle_buffer_flush(&handle->recv);
     circle_buffer_flush(&handle->send);
     XUART_EXIT_CRITICAL();
@@ -120,7 +108,7 @@ void xuart_clear(xuart_handle_t *handle)
 * @return -1：失败 0：成功
 * @note 
 */
-int xuart_open(xuart_handle_t *handle,uint8_t port,uint32_t baudrate,uint8_t data_bit,uint8_t stop_bit,
+int xuart_open(xuart_handle_t *handle,uint8_t port,uint32_t baud_rates,uint8_t data_bits,uint8_t stop_bits,
                   uint8_t *rx_buffer,uint32_t rx_size,uint8_t *tx_buffer,uint32_t tx_size)
 {
     int rc;
@@ -129,17 +117,17 @@ int xuart_open(xuart_handle_t *handle,uint8_t port,uint32_t baudrate,uint8_t dat
     DEBUG_ASSERT_NULL(handle);
 
     XUART_ENTER_CRITICAL();
-    rc = xuart.driver->init(port,baudrate,data_bit,stop_bit);
+    rc = handle->driver->init(port,baud_rates,data_bits,stop_bits);
     if (rc != 0){
         return -1;
     }
 
     handle->setting.port = port;
-    handle->setting.baudrate = baudrate;
-    handle->setting.data_bit = data_bit;
-    handle->setting.stop_bit = stop_bit;
-    xuart.driver->enable_rxne_it(handle->setting.port);
-    xuart.driver->disable_txe_it(handle->setting.port);
+    handle->setting.baudrate = baud_rates;
+    handle->setting.data_bit = data_bits;
+    handle->setting.stop_bit = stop_bits;
+    handle->driver->enable_rxne_it(handle->setting.port);
+    handle->driver->disable_txe_it(handle->setting.port);
     handle->is_rxne_int_enable = 1;
     handle->is_txe_int_enable = 0;
     circle_buffer_init(&handle->recv,rx_buffer,rx_size);
@@ -168,13 +156,13 @@ int xuart_close(xuart_handle_t *handle)
     }
     
     XUART_ENTER_CRITICAL();
-    rc = xuart.driver->deinit(handle->setting.port);
+    rc = handle->driver->deinit(handle->setting.port);
     if (rc != 0){
         return -1;
     }
  
-    xuart.driver->disable_rxne_it(handle->setting.port);
-    xuart.driver->disable_txe_it(handle->setting.port);
+    handle->driver->disable_rxne_it(handle->setting.port);
+    handle->driver->disable_txe_it(handle->setting.port);
     handle->is_rxne_int_enable = 0;
     handle->is_txe_int_enable = 0;
     handle->is_port_open = 0;
@@ -188,32 +176,34 @@ int xuart_close(xuart_handle_t *handle)
 
 /**
 * @brief 串口注册驱动
+* @param handle 串口句柄
 * @param driver 串口硬件驱动
 * @return 初始化是否成功
 * @retval 0 成功
 * @retval -1 失败
 * @note
 */
-int xuart_register_hal_driver(xuart_hal_driver_t *driver)
+int xuart_register_hal_driver(xuart_handle_t *handle,xuart_hal_driver_t *driver)
 { 
     if (driver == NULL || driver->init == NULL || driver->deinit == NULL  || \
         driver->enable_txe_it == NULL  || driver->disable_txe_it == NULL  || \
         driver->enable_rxne_it == NULL || driver->disable_rxne_it == NULL) {
         return -1;
     }
-    xuart.driver = driver;
-    xuart.is_driver_register = 1;
+    handle->driver = driver;
+    handle->is_driver_register = 1;
     return 0;
 }
 
 /**
-* @brief 串口中断接收一个字节
+* @brief 串口中断接收N字节
 * @param handle 串口句柄
-* @param recv 接收到的字节
+* @param buffer 缓存地址
+* @param size 数据量
 * @return none
 * @note
 */
-uint32_t xuart_isr_put_char(xuart_handle_t *handle,uint8_t recv)
+uint32_t xuart_isr_put_bytes_from_recv(xuart_handle_t *handle,uint8_t *buffer,uint8_t size)
 {
     uint32_t write;
 
@@ -221,23 +211,24 @@ uint32_t xuart_isr_put_char(xuart_handle_t *handle,uint8_t recv)
     DEBUG_ASSERT_NULL(handle);
     DEBUG_ASSERT_NULL(handle->is_port_open);
     
-    write = circle_buffer_write(&handle->recv,&recv,1);
-    if (write == 0 ) {
+    write = circle_buffer_write(&handle->recv,buffer,size);
+    if (write < size ) {
         /*禁止接收中断*/
         handle->is_rxne_int_enable = 0;
-        xuart.driver->disable_rxne_it(handle->setting.port);
+        handle->driver->disable_rxne_it(handle->setting.port);
     }  
     return write;
 }
 
 /**
-* @brief 串口中断发送一个字节
+* @brief 串口中断发送字节
 * @param handle 串口句柄
-* @param recv 需要发送的字节
+* @param buffer 缓存地址
+* @param size 数量
 * @return none
 * @note
 */
-uint32_t xuart_isr_get_char(xuart_handle_t *handle,uint8_t *send)
+uint32_t xuart_isr_get_bytes_to_send(xuart_handle_t *handle,uint8_t *buffer,uint8_t size)
 {
     uint32_t read;
 
@@ -245,11 +236,11 @@ uint32_t xuart_isr_get_char(xuart_handle_t *handle,uint8_t *send)
     DEBUG_ASSERT_NULL(handle);
     DEBUG_ASSERT_NULL(handle->is_port_open);
 
-    read = circle_buffer_read(&handle->send,send,1);
-    if (read == 0 ) {
+    read = circle_buffer_read(&handle->send,buffer,size);
+    if (read == 0) {
         /*禁止发送中断*/
         handle->is_txe_int_enable = 0;
-        xuart.driver->disable_txe_it(handle->setting.port);
+        handle->driver->disable_txe_it(handle->setting.port);
     }
     return read;
 }
@@ -281,7 +272,6 @@ uint32_t xuart_select(xuart_handle_t *handle,uint32_t timeout)
     return circle_buffer_size(&handle->recv);
 }
 
-
 /**
 * @brief  串口等待数据发送完毕
 * @param handle 串口句柄
@@ -303,6 +293,35 @@ uint32_t xuart_complete(xuart_handle_t *handle,uint32_t timeout)
     }
 
     return circle_buffer_size(&handle->send);
+}
+
+/**
+* @brief 数据阻塞读取指定数量数据
+* @param buffer 数据缓存指针
+* @param size 数据期望读取数量
+* @param timeout 超时时间
+* @return 实际读的数量
+* @note
+*/
+uint32_t xuart_read_block(xuart_handle_t *handle,uint8_t *buffer,uint32_t size,uint32_t timeout)
+{
+    uint32_t total = 0;
+    uint32_t read;
+    xtimer_t timer;
+
+    if (timeout == 0) {
+        return xuart_read(handle,buffer,size);
+    }
+
+    xtimer_init(&timer,0,timeout);
+    while (xtimer_value(&timer) > 0 && total < size) {
+        read = xuart_read(handle,buffer + total,size - total);
+        total += read;
+        if (total < size) {
+            osDelay(1);
+        }
+    }
+    return total;
 }
 
 #endif
