@@ -1,7 +1,7 @@
 #ifndef  __XUART_H__
 #define  __XUART_H__
 #include "stdint.h"
-#include "circle_buffer.h"
+
 #ifdef  __cplusplus
 # define XUART_BEGIN  extern "C" {
 # define XUART_END    }
@@ -12,9 +12,18 @@
 
 XUART_BEGIN
 
+typedef void* xuart_handle_t;
 
 #define  XUART_DEBUG   1
 
+enum {
+    XUART_ERROR_OK = 0,
+    XUART_ERROR_INVALID_PARAM = 1,
+    XUART_ERROR_HAL_DRIVER_NOT_REGISTER = 2,
+    XUART_ERROR_UART_PORT_NOT_OPEN = 3,
+    XUART_ERROR_UART_INIT_FAIL = 4,
+    XUART_ERROR_UART_DEINIT_FAIL = 5
+};
 /*freertos下使用*/
 #define  XUART_IN_FREERTOS                         1
 
@@ -22,7 +31,7 @@ XUART_BEGIN
 #define  XUART_PRIORITY_HIGH                       5
 #define  XUART_MAX_INTERRUPT_PRIORITY             (XUART_PRIORITY_HIGH << (8 - XUART_PRIORITY_BITS))
 
- /** xuart底层驱动*/
+/** xuart底层驱动*/
 typedef struct 
 {
     int (*init)(uint8_t port,uint32_t baudrate,uint8_t data_bit,uint8_t stop_bit); /**< 底层初始化*/
@@ -33,110 +42,80 @@ typedef struct
     void (*disable_rxne_it)(uint8_t port);/**< 失能接收中断*/
 }xuart_hal_driver_t;
 
- /** xuart句柄*/
-typedef struct
-{
-    struct {
-        uint8_t port;/**< 端口号*/
-        uint32_t baudrate;/**< 波特率*/
-        uint8_t data_bit;/**< 数据位*/
-        uint8_t stop_bit;/**< 停止位*/
-        uint8_t parity_bit;/**< 校验位*/
-    }setting;/**< uart配置*/
-    uint8_t is_port_open;/**< 是否已经打开*/
-    circle_buffer_t recv;/**< 接收缓存指针*/
-    circle_buffer_t send;/**< 发送缓存地址*/
-    uint8_t is_txe_int_enable;/**< 是否允许发送中断*/
-    uint8_t is_rxne_int_enable;/**< 是否允许接收中断*/
-    xuart_hal_driver_t *driver;
-    uint8_t is_driver_register;
-}xuart_handle_t;
-
-
+/*内存管理*/
+uint8_t *xuart_port_malloc(uint16_t size);
+void xuart_port_free(void *ptr);
 
 /**
-* @brief  从串口非阻塞的读取数据
+* @brief  创建串口句柄
+* @param read_buffer_size 读缓存大小
+* @param write_buffer_size 写缓存大小
+* @param driver 驱动指针
+* @return NULL:失败 其他：串口句柄
+* @note 可重入
+*/
+xuart_handle_t xuart_create(uint16_t read_buffer_size,uint16_t write_buffer_size,xuart_hal_driver_t *driver);
+/**
+* @brief 打开串口
 * @param handle 串口句柄
-* @param dst 数据目的地址
+* @param port 端口号
+* @param baud_rates 波特率
+* @param data_bits 数据位
+* @param stop_bit 数据
+* @return < 0：失败 XUART_ERROR_OK：成功
+* @note 
+*/
+int xuart_open(xuart_handle_t handle,uint8_t port,uint32_t baud_rates,uint8_t data_bits,uint8_t stop_bits);
+/**
+* @brief  串口非阻塞的读数据
+* @param handle 串口句柄
+* @param buffer 数据地址
 * @param size 期望读取的数量
-* @return 读取的数量
+* @return < 0：错误 其他：读取的数量
 * @note 可重入
 */
-uint32_t xuart_read(xuart_handle_t *handle,uint8_t *dst,uint32_t size);
-
-
+int xuart_read(xuart_handle_t handle,uint8_t *buffer,uint32_t size);
 /**
-* @brief  从串口非阻塞的写入指定数量的数据
+* @brief 串口非阻塞的写入数据
 * @param handle 串口句柄
-* @param src 数据源地址
+* @param buffer 数据地址
 * @param size 期望写入的数量
-* @return 实际写入的数量
+* @return < 0：失败 其他：写入的数量
 * @note 可重入
 */
-uint32_t xuart_write(xuart_handle_t *handle,const uint8_t *src,uint32_t size);
-
+int xuart_write(xuart_handle_t *handle,const uint8_t *buffer,uint32_t size);
 /**
 * @brief 串口缓存清除
 * @param handle 串口句柄
-* @return 无
+* @return < 0：失败 XUART_ERROR_OK：成功
 * @note 
 */
-void xuart_clear(xuart_handle_t *handle);
-
+int xuart_clear(xuart_handle_t handle);
 /**
-* @brief 打开串口
-* @param handle 创建输出的串口句柄指针
-* @param port 端口号
-* @param baudrate 波特率
-* @param data_bits 数据位
-* @param stop_bit 数据
-* @param handle 创建输出的串口句柄指针
-* @return -1：失败 0：成功
-* @note 
-*/
-int xuart_open(xuart_handle_t *handle,uint8_t port,uint32_t baudrate,uint8_t data_bit,uint8_t stop_bit,
-                              uint8_t *rx_buffer,uint32_t rx_size,uint8_t *tx_buffer,uint32_t tx_size);
-
-/**
-* @brief  关闭串口
+* @brief 关闭串口
 * @param handle 串口句柄
-* @return -1： 失败 0：失败
+* @return < 0：失败 XUART_ERROR_OK：成功
 * @note 
 */
-int xuart_close(xuart_handle_t *handle);
-
+int xuart_close(xuart_handle_t handle);
 /**
-* @brief 串口注册驱动
-* @param handle 串口句柄
-* @param driver 串口硬件驱动
-* @return 初始化是否成功
-* @retval 0 成功
-* @retval -1 失败
-* @note
-*/
-int xuart_register_hal_driver(xuart_handle_t *handle,xuart_hal_driver_t *driver);
-
-/**
-* @brief 串口中断接收N字节
+* @brief 中断接收字节
 * @param handle 串口句柄
 * @param buffer 缓存地址
 * @param size 数据量
-* @return none
+* @return < 0：失败 其他：接收的数量
 * @note
 */
-uint32_t xuart_isr_put_bytes_from_recv(xuart_handle_t *handle,uint8_t *buffer,uint8_t size);
-
-
+int xuart_isr_write_bytes(xuart_handle_t handle,uint8_t *buffer,uint8_t size);
 /**
-* @brief 串口中断发送字节
+* @brief 中断发送字节
 * @param handle 串口句柄
 * @param buffer 缓存地址
 * @param size 数量
-* @return none
+* @return < 0：失败 其他：发送的数量
 * @note
 */
-uint32_t xuart_isr_get_bytes_to_send(xuart_handle_t *handle,uint8_t *buffer,uint8_t size);
-
+int xuart_isr_read_bytes(xuart_handle_t handle,uint8_t *buffer,uint8_t size);
 
 
 #if XUART_IN_FREERTOS > 0
@@ -145,39 +124,48 @@ uint32_t xuart_isr_get_bytes_to_send(xuart_handle_t *handle,uint8_t *buffer,uint
 * @brief 串口等待数据
 * @param handle 串口句柄
 * @param timeout 超时时间
-* @return 接收缓存中的数据量
+* @return < 0：失败 其他：缓存的数量
 * @note 
 */
-uint32_t xuart_select(xuart_handle_t *handle,uint32_t timeout);
-
+int xuart_select(xuart_handle_t handle,uint32_t timeout);
 /**
 * @brief  串口等待数据发送完毕
 * @param handle 串口句柄
 * @param timeout 超时时间
-* @return 发送缓存中的数据量
+* @return < 0：失败 其他：发送缓存剩余的数量
 * @note 
 */
-uint32_t xuart_complete(xuart_handle_t *handle,uint32_t timeout);
-
+int xuart_complete(xuart_handle_t handle,uint32_t timeout);
 /**
-* @brief 数据阻塞读取指定数量数据
+* @brief 串口阻塞读取数据
+* @param handle 串口句柄
 * @param buffer 数据缓存指针
 * @param size 数据期望读取数量
 * @param timeout 超时时间
-* @return 实际读的数量
+* @return < 0：失败 其他：实际读取的数量
 * @note
 */
-uint32_t xuart_read_block(xuart_handle_t *handle,uint8_t *buffer,uint32_t size,uint32_t timeout);
+int xuart_read_block(xuart_handle_t handle,uint8_t *buffer,uint32_t size,uint32_t timeout);
+/**
+* @brief 串口阻塞写入数据
+* @param handle 串口句柄
+* @param buffer 数据缓存指针
+* @param size 数据期望读取数量
+* @param timeout 超时时间
+* @return < 0：失败 其他：实际写入的数量
+* @note
+*/
+int xuart_write_block(xuart_handle_t handle,uint8_t *buffer,uint32_t size,uint32_t timeout);
 
 
 #endif
 
 /**
-*  serial critical configuration for IAR EWARM
+*  critical configuration for IAR EWARM
 */
 
 #ifdef __ICCARM__
-#include "cmsis_iccarm.h"
+#include "cmsis_iar.h"
   #if (defined (__ARM6M__) && (__CORE__ == __ARM6M__))             
     #define XUART_ENTER_CRITICAL()                             \
     {                                                          \

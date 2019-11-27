@@ -19,11 +19,9 @@
 *****************************************************************************/
 #include "st_cm3_uart_hal_driver.h"
 
-
 extern UART_HandleTypeDef huart1,huart2,huart3;
-
-/*st serial uart驱动结构体*/
-xuart_hal_driver_t xuart_hal_driver = {
+/*st cm3 uart驱动结构体*/
+xuart_hal_driver_t st_cm3_xuart_hal_driver = {
 .init = st_uart_hal_init,
 .deinit = st_uart_hal_deinit,
 .enable_txe_it = st_uart_hal_enable_txe_it,
@@ -182,18 +180,18 @@ static void st_uart_hal_disable_rxne_it(uint8_t port)
 
 
 /**
-* @brief 串口中断routine驱动
+* @brief 串口1中断routine
 * @param port uart端口
 * @return 无
 * @note
 */
-void st_uart_hal_isr(xuart_handle_t *handle)
+void st_uart_hal_isr(xuart_handle_t handle,uint8_t port)
 {
     uint32_t rc;
     uint8_t recv_byte,send_byte;
     UART_HandleTypeDef *st_uart_handle;
 
-    st_uart_handle = st_uart_hal_get_handle_by_port(handle->setting.port);
+    st_uart_handle = st_uart_hal_get_handle_by_port(port);
 
     uint32_t tmp_flag = 0, tmp_it_source = 0; 
   
@@ -203,7 +201,7 @@ void st_uart_hal_isr(xuart_handle_t *handle)
     /*接收中断*/
     if((tmp_flag != RESET) && (tmp_it_source != RESET)) { 
         recv_byte = (char)(st_uart_handle->Instance->DR & (uint8_t)0x00FF);
-        xuart_isr_put_char(handle,recv_byte);
+        xuart_isr_write_bytes(handle,&recv_byte,1);
     }
 
     tmp_flag = __HAL_UART_GET_FLAG(st_uart_handle, /*UART_FLAG_TXE*/UART_FLAG_TC);
@@ -211,8 +209,8 @@ void st_uart_hal_isr(xuart_handle_t *handle)
   
     /*发送中断*/
     if ((tmp_flag != RESET) && (tmp_it_source != RESET)) {
-        rc = xuart_isr_get_char(handle,&send_byte);
-        if (rc) {
+        rc = xuart_isr_read_bytes(handle,&send_byte,1);
+        if (rc == 1) {
             st_uart_handle->Instance->DR = send_byte;
         }
     }  

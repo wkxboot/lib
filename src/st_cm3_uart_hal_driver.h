@@ -9,7 +9,7 @@
     extern "C" {
 #endif
 
-extern xuart_hal_driver_t xuart_hal_driver;
+extern xuart_hal_driver_t st_cm3_xuart_hal_driver;
 /*
 * @brief 串口初始化驱动
 * @param port uart端口
@@ -64,11 +64,12 @@ void st_uart_hal_disable_rxne_it(uint8_t port);
 
 /*
 * @brief 串口中断routine驱动
+* @param handle uart句柄
 * @param port uart端口
 * @return 无
 * @note
 */
-void st_uart_hal_isr(xuart_handle_t *handle);
+void st_uart_hal_isr(xuart_handle_t handle,uint8_t port);
 
 
 

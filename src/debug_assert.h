@@ -11,31 +11,19 @@
  
 DEBUG_ASSERT_BEGIN
 
-#if  defined(DEBUG_ASSERT) &&  DEBUG_ASSERT > 0
-#define  DEBUG_ASSERT_NULL(x)                 \
+#define  DEBUG_ASSERT_ENABLE  1
+
+#if defined(DEBUG_ASSERT_ENABLE) && DEBUG_ASSERT_ENABLE > 0
+#define  DEBUG_ASSERT(x)                      \
 do                                            \
 {                                             \
-    if ((x) == NULL) {                        \
+    if ((void *)(x) == (void *)0) {           \
         while (1);                            \
     }                                         \
 } while (0);                                
 #else
-#define  DEBUG_ASSERT_NULL(x)
+#define  DEBUG_ASSERT(x)
 #endif
-
-#if  defined(DEBUG_ASSERT) &&  DEBUG_ASSERT > 0
-#define  DEBUG_ASSERT_FALSE(x)                \
-do                                            \
-{                                             \
-    if ((x) == 0) {                           \
-        while (1);                            \
-    }                                         \
-} while (0);                                
-#else
-#define  DEBUG_ASSERT_FALSE(x)
-#endif
-
-
 
 DEBUG_ASSERT_END
 #endif

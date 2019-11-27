@@ -57,7 +57,7 @@ uint32_t xtimer_value(xtimer_t *timer)
 {
     uint32_t time_elapse;
 
-    DEBUG_ASSERT_NULL(timer);
+    DEBUG_ASSERT(timer);
 
     time_elapse = osKernelSysTick() - timer->start; 
 
