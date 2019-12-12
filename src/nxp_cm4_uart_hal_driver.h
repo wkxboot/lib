@@ -11,14 +11,14 @@
  
 NXP_CM4_UART_HAL_DRIVER_BEGIN
 #include "xuart.h"
-extern xuart_hal_driver_t xuart_hal_driver;
+extern xuart_hal_driver_t nxp_cm4_xuart_hal_driver;
 /**
 * @brief 串口中断routine驱动
 * @param handle uart的serial句柄
 * @return 无
 * @note
 */
-void nxp_uart_hal_isr(xuart_handle_t *handle);
+void nxp_uart_hal_isr(xuart_handle_t handle,uint8_t port);
 
 NXP_CM4_UART_HAL_DRIVER_END
 #endif

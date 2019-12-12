@@ -27,8 +27,8 @@ enum {
 /*freertos下使用*/
 #define  XUART_IN_FREERTOS                         1
 
-#define  XUART_PRIORITY_BITS                       4
-#define  XUART_PRIORITY_HIGH                       5
+#define  XUART_PRIORITY_BITS                       3
+#define  XUART_PRIORITY_HIGH                       3
 #define  XUART_MAX_INTERRUPT_PRIORITY             (XUART_PRIORITY_HIGH << (8 - XUART_PRIORITY_BITS))
 
 /** xuart底层驱动*/
@@ -83,7 +83,7 @@ int xuart_read(xuart_handle_t handle,uint8_t *buffer,uint32_t size);
 * @return < 0：失败 其他：写入的数量
 * @note 可重入
 */
-int xuart_write(xuart_handle_t *handle,const uint8_t *buffer,uint32_t size);
+int xuart_write(xuart_handle_t handle,const uint8_t *buffer,uint32_t size);
 /**
 * @brief 串口缓存清除
 * @param handle 串口句柄
@@ -165,7 +165,6 @@ int xuart_write_block(xuart_handle_t handle,uint8_t *buffer,uint32_t size,uint32
 */
 
 #ifdef __ICCARM__
-#include "cmsis_iar.h"
   #if (defined (__ARM6M__) && (__CORE__ == __ARM6M__))             
     #define XUART_ENTER_CRITICAL()                             \
     {                                                          \

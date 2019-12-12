@@ -85,7 +85,7 @@ static int __ym_sleep_ms(uint32_t ms)
 * @note
 */
 
-static void __ym_flush(xuart_handle_t *handle)
+static void __ym_flush(xuart_handle_t handle)
 {
    xuart_clear(handle);
 }
@@ -96,7 +96,7 @@ static void __ym_flush(xuart_handle_t *handle)
 * @return 
 * @note
 */
-static int __ym_getchar(xuart_handle_t *handle,uint32_t timeout)
+static int __ym_getchar(xuart_handle_t handle,uint32_t timeout)
 {
     int rc;
     uint8_t c;
@@ -132,7 +132,7 @@ static int __ym_getchar(xuart_handle_t *handle,uint32_t timeout)
 * @return 
 * @note
 */
-static int __ym_putchar(xuart_handle_t *handle,char c)
+static int __ym_putchar(xuart_handle_t handle,char c)
 {
     int rc;
 
@@ -232,7 +232,7 @@ static void ym_readU32(const uint8_t* buf, uint32_t *val)
   *        -1: timeout or packet error
   *         1: abort by user / corrupt packet
   */
-static int32_t ym_rx_packet(xuart_handle_t *handle,
+static int32_t ym_rx_packet(xuart_handle_t handle,
                             uint8_t *rxdata,
                             int32_t *rxlen,
                             uint32_t packets_rxed,
@@ -328,7 +328,7 @@ static int32_t ym_rx_packet(xuart_handle_t *handle,
  * @param rxlen  Max in length
  * @return The length of the file received, or 0 on error
  */
-int32_t fymodem_receive(xuart_handle_t *handle,
+int32_t fymodem_receive(xuart_handle_t handle,
                         uint32_t flash_addr,
                         uint32_t flash_limit,
                         char *filename,
@@ -498,7 +498,7 @@ int32_t fymodem_receive(xuart_handle_t *handle,
 }
 
 /* ------------------------------------ */
-static void ym_send_packet(xuart_handle_t *handle,
+static void ym_send_packet(xuart_handle_t handle,
                            uint8_t *txdata,
                            int32_t block_nbr)
 {
@@ -533,7 +533,7 @@ static void ym_send_packet(xuart_handle_t *handle,
 
 /* ----------------------------------------------- */
 /* Send block 0 (the filename block), filename might be truncated to fit. */
-static void ym_send_packet0(xuart_handle_t *handle,
+static void ym_send_packet0(xuart_handle_t handle,
                             const char* filename,
                             int32_t filesize)
 {
@@ -562,7 +562,7 @@ static void ym_send_packet0(xuart_handle_t *handle,
 }
 
 /* ------------------------------------------------- */
-static void ym_send_data_packets(xuart_handle_t *handle,
+static void ym_send_data_packets(xuart_handle_t handle,
                                  uint8_t* txdata,
                                  uint32_t txlen,
                                  uint32_t timeout_ms)
@@ -615,7 +615,7 @@ static void ym_send_data_packets(xuart_handle_t *handle,
 }
 
 /* ------------------------------------------------------- */
-int32_t fymodem_send(xuart_handle_t *handle,uint8_t* txdata, size_t txsize, const char* filename)
+int32_t fymodem_send(xuart_handle_t handle,uint8_t* txdata, size_t txsize, const char* filename)
 {
   bool crc_nak = true;
   bool file_done = false;

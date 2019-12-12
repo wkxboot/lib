@@ -164,7 +164,7 @@ int xuart_read(xuart_handle_t handle,uint8_t *buffer,uint32_t size)
 * @return < 0：失败 其他：写入的数量
 * @note 可重入
 */
-int xuart_write(xuart_handle_t *handle,const uint8_t *buffer,uint32_t size)
+int xuart_write(xuart_handle_t handle,const uint8_t *buffer,uint32_t size)
 {
     uint32_t write = 0;
 

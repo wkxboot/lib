@@ -22,7 +22,6 @@
 #include "fsl_clock.h"
 #include "pin_mux.h"
 #include "nxp_cm4_uart_hal_driver.h"
-
 /*******************************************************************************
 *
 *        lpc54606 serial uart hal driver在IAR freertos下的移植
@@ -36,7 +35,7 @@ static void nxp_uart_hal_enable_rxne_it(uint8_t port);
 static void nxp_uart_hal_disable_rxne_it(uint8_t port);
 
 /*nxp uart驱动结构体*/
-xuart_hal_driver_t xuart_hal_driver = {
+xuart_hal_driver_t nxp_cm4_xuart_hal_driver = {
 .init = nxp_uart_hal_init,
 .deinit = nxp_uart_hal_deinit,
 .enable_txe_it = nxp_uart_hal_enable_txe_it,
@@ -272,14 +271,14 @@ static void nxp_uart_hal_disable_rxne_it(uint8_t port)
 * @return 无
 * @note
 */
-void nxp_uart_hal_isr(xuart_handle_t *handle)
+void nxp_uart_hal_isr(xuart_handle_t handle,uint8_t port)
 {
     int rc;
     uint32_t tmp_flag = 0, tmp_it_source = 0; 
     uint8_t send_byte,recv_byte;
     USART_Type *nxp_uart_handle; 
 
-    nxp_uart_handle = nxp_serial_uart_search_handle_by_port(handle->setting.port);
+    nxp_uart_handle = nxp_serial_uart_search_handle_by_port(port);
 
     tmp_flag = USART_GetEnabledInterrupts(nxp_uart_handle);
     tmp_it_source = USART_GetStatusFlags(nxp_uart_handle);
@@ -287,14 +286,13 @@ void nxp_uart_hal_isr(xuart_handle_t *handle)
     /*接收中断处理*/
     if((tmp_it_source & kUSART_RxFifoNotEmptyFlag) && (tmp_flag & kUSART_RxLevelInterruptEnable)){
         recv_byte = USART_ReadByte(nxp_uart_handle);
-        xuart_isr_put_bytes_from_recv(handle,&recv_byte,1);
-
+        xuart_isr_write_bytes(handle,&recv_byte,1);
     }
     /*发送中断处理*/
     if((tmp_it_source & kUSART_TxFifoEmptyFlag) && (tmp_flag & kUSART_TxLevelInterruptEnable)){
-        rc = xuart_isr_get_bytes_to_send(handle,&send_byte,1);
-        if (rc) {
-            USART_WriteByte(nxp_uart_handle, send_byte);
+        rc = xuart_isr_read_bytes(handle,&send_byte,1);
+        if (rc == 1) {
+            USART_WriteByte(nxp_uart_handle,send_byte);
         }
     }
 }

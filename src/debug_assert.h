@@ -20,7 +20,7 @@ do                                            \
     if ((void *)(x) == (void *)0) {           \
         while (1);                            \
     }                                         \
-} while (0);                                
+} while (0)
 #else
 #define  DEBUG_ASSERT(x)
 #endif

@@ -17,7 +17,7 @@ static void wk2124_uart_hal_enable_rxne_it(uint8_t port);
 static void wk2124_uart_hal_disable_rxne_it(uint8_t port);
 
 /*nxp uart驱动结构体*/
-xuart_hal_driver_t xuart_wk2124_hal_driver = {
+xuart_hal_driver_t wk2124_xuart_hal_driver = {
 .init = wk2124_uart_hal_init,
 .deinit = wk2124_uart_hal_deinit,
 .enable_txe_it = wk2124_uart_hal_enable_txe_it,

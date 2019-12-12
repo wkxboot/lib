@@ -11,7 +11,7 @@
  
 WK2124_UART_HAL_DRIVER_BEGIN
 #include "xuart.h"
-extern xuart_hal_driver_t xuart_wk2124_hal_driver;
+extern xuart_hal_driver_t wk2124_xuart_hal_driver;
 
 WK2124_UART_HAL_DRIVER_END
 #endif
