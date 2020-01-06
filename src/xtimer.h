@@ -14,17 +14,24 @@ XTIMER_BEGIN
  /** @brief 定时器定义*/
 typedef struct
 {
-    uint8_t dir; /**< 定时器增长方向*/
     uint32_t timeout;/**< 定时器定时值*/
-    uint32_t start;/**< 定时器初始值*/
+    uint32_t start;/**< 定时器开始时间*/
 }xtimer_t;
 
+#define time_after(a,b)         \
+((int32_t)(b) - (int32_t)(a) < 0)
+
+#define time_before(a,b) time_after(b,a)
+ 
+#define time_after_eq(a,b)       \
+((int32_t)(a) - (int32_t)(b) >= 0)
+
+#define time_before_eq(a,b) time_after_eq(b,a)
 
 /**
 * @brief 定时器初始化
 * @details
 * @param timer 定时器指针
-* @param dir 定时器增长方向
 * @param timeout 定时器超时时间
 * @return 初始化结果
 * @retval 0 成功
@@ -32,18 +39,16 @@ typedef struct
 * @attention
 * @note
 */
-int xtimer_init(xtimer_t *timer,uint8_t dir,uint32_t timeout);
+int xtimer_init(xtimer_t *timer,uint32_t timeout);
 
 /**
-* @brief 定时器当前值
+* @brief 定时器是否超时
 * @details
 * @param timer 定时器指针
-* @return 定时器当前值
-* @attention 如果是向上增长，当流逝的时间大于超时值时，返回超时值；
-*            如果时向下增长，当流逝的时间大于超时值时，返回0 。
+* @return 0：未超时 1：超时
 * @note
 */
-uint32_t xtimer_value(xtimer_t *timer);
+uint8_t xtimer_is_timeout(xtimer_t *timer);
 
 
 

@@ -327,8 +327,8 @@ int xuart_select(xuart_handle_t handle,uint32_t timeout)
     if (instance_handle->is_port_open == 0) {
         return -XUART_ERROR_UART_PORT_NOT_OPEN;
     }
-    xtimer_init(&timer,0,timeout);
-    while (xtimer_value(&timer) > 0 && circle_buffer_size(&instance_handle->read) == 0) {
+    xtimer_init(&timer,timeout);
+    while (!xtimer_is_timeout(&timer) && circle_buffer_size(&instance_handle->read) == 0) {
         osDelay(1);
     }
      
@@ -352,8 +352,8 @@ int xuart_complete(xuart_handle_t handle,uint32_t timeout)
     if (instance_handle->is_port_open == 0) {
         return -XUART_ERROR_UART_PORT_NOT_OPEN;
     }
-    xtimer_init(&timer,0,timeout);
-    while (xtimer_value(&timer) > 0 && circle_buffer_size(&instance_handle->write) > 0) {
+    xtimer_init(&timer,timeout);
+    while (!xtimer_is_timeout(&timer) && circle_buffer_size(&instance_handle->write) > 0) {
         osDelay(1);
     }
 
@@ -378,8 +378,8 @@ int xuart_read_block(xuart_handle_t handle,uint8_t *buffer,uint32_t size,uint32_
     if (timeout == 0) {
         return xuart_read(handle,buffer,size);
     }
-    xtimer_init(&timer,0,timeout);
-    while (xtimer_value(&timer) > 0 && total < size) {
+    xtimer_init(&timer,timeout);
+    while (!xtimer_is_timeout(&timer) && total < size) {
         read = xuart_read(handle,buffer + total,size - total);
         if (read < 0) {
             return read;
@@ -410,8 +410,8 @@ int xuart_write_block(xuart_handle_t handle,uint8_t *buffer,uint32_t size,uint32
     if (timeout == 0) {
         return xuart_write(handle,buffer,size);
     }
-    xtimer_init(&timer,0,timeout);
-    while (xtimer_value(&timer) > 0 && total < size) {
+    xtimer_init(&timer,timeout);
+    while (!xtimer_is_timeout(&timer) && total < size) {
         write = xuart_write(handle,buffer + total,size - total);
         if (write < 0) {
             return write;

@@ -100,12 +100,8 @@ static int __ym_getchar(xuart_handle_t handle,uint32_t timeout)
 {
     int rc;
     uint8_t c;
-    xtimer_t timer;
-    
-    xtimer_init(&timer,0,timeout);
 
-
-    rc = xuart_select(handle,xtimer_value(&timer));
+    rc = xuart_select(handle,timeout);
     if (rc == 0) {
         log_error("ymodem select timeout.\r\n");
         return -1;

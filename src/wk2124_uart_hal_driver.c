@@ -26,7 +26,7 @@ xuart_hal_driver_t wk2124_xuart_hal_driver = {
 .disable_rxne_it = wk2124_uart_hal_disable_rxne_it
 };
 
-#define  WK2124_UART_PORT_BASE  9
+#define  WK2124_UART_PORT_BASE  10
 
 static int wk2124_uart_hal_init(uint8_t port,uint32_t baud_rates,uint8_t data_bits,uint8_t stop_bits)
 {
